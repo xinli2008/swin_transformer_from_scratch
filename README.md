@@ -1,6 +1,10 @@
 # swin_transformer_from_scratch
 pytorch版本实现的swin_transformer, 用于学习目的, 帮助更好的了解它的工作原理。
 
+## Architecture
+
+<img src="./assets/swin_transformer.png" width="800px"></img>
+
 ## Citation
 ```bibtex
 @inproceedings{liu2021swin,
