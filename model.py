@@ -73,7 +73,48 @@ class PatchMerging(nn.Module):
         return x
 
 
-class SwinTransformer(nn.Module):
+class SwinTransformerBlock(nn.Module):
+    """
+    swin transformer block
+    """
+    def __init__(self, dim, num_heads, windows_size, shift_size, mlp_ratio, qkv_bias, drop_rate, norm_layer):
+        pass
+
+
+class BasicLayer(nn.Module):
+    """
+    a base swin transformer layer for each stage
+    """
+    def __init__(self, dim, depth, num_heads, windows_size, mlp_ratio, qkv_bias, drop_rate, norm_layer, downsample):
+        super().__init__()
+        self.dim = dim
+        self.windows_size = windows_size
+        # NOTE: 
+        self.shift_size = windows_size // 2
+
+        # build transformer block in current stage
+        self.blocks = nn.ModuleList([
+            SwinTransformerBlock(
+                dim = dim,
+                num_heads = num_heads,
+                windows_size = windows_size,
+                shift_size = 0 if (i % 2 ==0) else self.shift_size,
+                mlp_ratio = mlp_ratio,
+                qkv_bias = qkv_bias,
+                drop_rate = drop_rate,
+                norm_layer = norm_layer
+            )
+         for i in range(depth)   
+        ])
+
+        # patch merging layer
+        if downsample is not None:
+            self.downsample = downsample(dim = dim, norm_layer = norm_layer)
+        else:
+            self.downsample = None
+
+
+class SwinTransformerTiny(nn.Module):
     """
     Swin Transformer Tiny Version
     """
@@ -96,7 +137,17 @@ class SwinTransformer(nn.Module):
         # build-layers
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
-            layers = nn.Sequential()
+            layers = BasicLayer(
+                dim = int(embedding_dim * 2 ** i_layer),
+                depth = depths[i_layer],
+                num_heads = num_heads[i_layer],
+                window_size = window_size,
+                mlp_ratio = mlp_ratio,
+                qkv_bias = qkv_bias,
+                drop_rate = drop_rate,
+                norm_layer = norm_layer,
+                downsample = PatchMerging if (i_layer < len(depths) - 1) else None
+            )
             self.layers.append(layers)
         
         self.norm = norm_layer(self.num_features)
