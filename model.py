@@ -150,7 +150,8 @@ class WindowAttention(nn.Module):
         self.scale = head_dim ** -0.5
 
         # NOTE: 根据windows_size来定义一个相对位置编码的表格
-        # 当window_size = 7时, 每一个位置与其他位置的相对关系一共有2*7-1=13种。
+        # 假设当window_size = 7时, 每一个位置与其他位置的相对关系一共有2*7-1=13种。
+        # 所以这个relative_position_bias_table的形状应该是(2*window_size-1)
         self.realative_position_bias_table = nn.Parameter(
             torch.zeros((2 * window_size- 1) * (2 * window_size - 1), num_heads)
         )
@@ -215,7 +216,8 @@ class WindowAttention(nn.Module):
         x = torch.matmul(attention_scores, v).transpose(1, 2).reshape(batch, seq_length, dimension)
         x = self.proj(x)
         return x
-    
+
+
 class SwinTransformerBlock(nn.Module):
     """
     swin transformer block
